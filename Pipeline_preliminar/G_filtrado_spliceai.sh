@@ -1,23 +1,10 @@
 #!/bin/bash
-# =============================================================================
-# filtrar_spliceai.sh
-#
-# Objetivo: a partir de un VCF anotado con SpliceAI, generar un TSV con las
-# variantes cuyo delta score (DS_AG, DS_AL, DS_DG o DS_DL) sea >= 0.5.
-#
-# Uso:
-#   bash filtrar_spliceai.sh input.vcf.gz salida_prefijo
-#
-# Genera:
-#   <prefijo>_spliceai.tsv        -> extracción completa (sin filtrar)
-#   <prefijo>_spliceai_0.5.tsv    -> solo variantes con algún DS >= 0.5
-# =============================================================================
 
 set -euo pipefail
 
-# -----------------------------------------------------------------------------
-# 0. ARGUMENTOS
-# -----------------------------------------------------------------------------
+
+#------------------------------ARGUMENTOS---------------------------------
+
 
 if [[ $# -lt 2 ]]; then
     echo "Uso: $0 input.vcf.gz salida_prefijo"
@@ -41,9 +28,9 @@ if ! command -v bcftools &> /dev/null; then
     exit 1
 fi
 
-# -----------------------------------------------------------------------------
-# 1. EXTRAER CHROM/POS/REF/ALT/SpliceAI CON bcftools query
-# -----------------------------------------------------------------------------
+
+#-----------------EXTRAER CHROM/POS/REF/ALT/SpliceAI CON bcftools query----------------
+
 
 echo "Extrayendo campos de $VCF_IN..."
 
@@ -58,21 +45,7 @@ echo "Extrayendo campos de $VCF_IN..."
 
 echo "Extracción completada: $TSV_RAW"
 
-# -----------------------------------------------------------------------------
-# 2. FILTRAR POR DELTA SCORE >= UMBRAL
-# -----------------------------------------------------------------------------
-
-# IMPORTANTE - formato asumido del campo SpliceAI (anotación estándar
-# SpliceAI/VEP, separada por '|'):
-#   ALLELE|SYMBOL|DS_AG|DS_AL|DS_DG|DS_DL|DP_AG|DP_AL|DP_DG|DP_DL
-#
-# Si tu VCF usa otro orden de subcampos (revisa la línea ##INFO=<ID=SpliceAI,...>
-# de la cabecera de tu VCF con: bcftools view -h "$VCF_IN" | grep SpliceAI),
-# ajusta los índices AG/AL/DG/DL más abajo (variable "campo SpliceAI, posición N").
-#
-# Si un mismo registro tiene varias anotaciones SpliceAI separadas por coma
-# (multi-transcrito o multialélico), se evalúa cada una y basta con que UNA
-# supere el umbral para que la variante se incluya.
+#---------------------FILTRAR POR DELTA SCORE >= UMBRAL-----------------
 
 echo "Filtrando variantes con algún delta score >= $UMBRAL..."
 
