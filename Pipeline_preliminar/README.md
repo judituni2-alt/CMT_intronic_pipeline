@@ -1,7 +1,6 @@
 # PIPELINE VARIANTES INTRÓNICAS CHARCOT-MARIE-TOOTH
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-
 ## Archivos necesarios para realizar el Preprocesamiento
 - Archivos en formato FASTQ paired end  
 - Genoma de referencia:  https://console.cloud.google.com/storage/browser/gcp-public-data--broad-references/hg38/v0  
