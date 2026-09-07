@@ -216,7 +216,7 @@ awk -F'\t' 'BEGIN {OFS="\t"} {
 }'
 } > output.tsv
 ```
-Para filtrar el archivo tsv de manera que se genere otro con variantes que tengan algún valor SpliceAI_pred_DS>0.2
+Para filtrar el archivo tsv de manera que se genere otro con variantes que tengan algún valor SpliceAI_pred_DS>=0.2
 ```
 python -c "import pandas as pd; df=pd.read_csv('CMT1234.intronicas.spliceai.tsv', sep='\t'); cols=['SpliceAI_pred_DS_AG','SpliceAI_pred_DS_AL','SpliceAI_pred_DS_DG','SpliceAI_pred_DS_DL']; df[cols]=df[cols].apply(pd.to_numeric, errors='coerce'); df[df[cols].max(axis=1)>0.2].to_csv('CMT1234.intronicas.spliceai.tsv', sep='\t', index=False)"
 ```
@@ -237,7 +237,7 @@ Para crear un tsv a partir del vfc generado en anotacion2 (anotacionces de MaxEn
                 printf "\t%s", a[i]
             printf "\n"
         }
-    }'; } > Neur_MUS1409_anotation2_CSQ.tsv
+    }'; } > CMT1234_anotation2_CSQ.tsv
 ```
 ```
 {
@@ -245,7 +245,7 @@ Para crear un tsv a partir del vfc generado en anotacion2 (anotacionces de MaxEn
 
     bcftools query -f \
 '%CHROM\t%POS\t%REF\t%ALT\t%INFO/INDEL\t%INFO/IDV\t%INFO/IMF\t%INFO/DP\t%INFO/VDB\t%INFO/RPBZ\t%INFO/MQBZ\t%INFO/BQBZ\t%INFO/MQSBZ\t%INFO/SCBZ\t%INFO/SGB\t%INFO/MQ0F\t%INFO/AC\t%INFO/AN\t%INFO/DP4\t%INFO/MQ\t%INFO/AF\t%INFO/ConSplice\t%INFO/SpliceAI\t%INFO/PDIVAS\t%INFO/CSQ\n' \
-NeurMUS1409.anotacionPDIVASvep.vcf |
+CMT1234.anotacionPDIVASvep.vcf |
     awk -F'\t' '
     BEGIN {
         OFS = "\t"
@@ -274,6 +274,6 @@ NeurMUS1409.anotacionPDIVASvep.vcf |
             delete csq
         }
     }'
-} > Neur_MUS1409_anotation2_completa.tsv
+} > CMT1234_anotation2_completa.tsv
 ```
 
