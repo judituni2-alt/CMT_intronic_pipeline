@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
 
-
-
-# ---------------------------------------------------------------------------
-# ANOTACIÓN VEP + SpliceAI (solo anotación: la separación intrón/exón ya
-# se hizo por BED en el paso 2, aquí VEP no filtra nada)
-# Sin filtro de sinónimas: no aplica a variantes intrónicas.
-# ---------------------------------------------------------------------------
-
 set -euo pipefail
 
 # ---------------------------- 0. CONFIGURACIÓN ------------------------------
