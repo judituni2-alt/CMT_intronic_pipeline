@@ -1,15 +1,6 @@
 # PIPELINE VARIANTES INTRÓNICAS CHARCOT-MARIE-TOOTH
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-El pipeline sigue el siguiente flujo de trabajo
-
-Preprocesamiento
-
-<img width="342" height="256" alt="TFM" src="https://github.com/user-attachments/assets/d75167e5-d971-4a8c-9ce6-04bfe6bbda21" />
-
-Filtrado variantes candidatas
-
-<img width="342" height="256" alt="TFM (2)" src="https://github.com/user-attachments/assets/f0b9739d-04f7-452c-9d7e-62245d3c1e6e" />
 
 ## Archivos necesarios para realizar el Preprocesamiento
 - Archivos en formato FASTQ paired end  
