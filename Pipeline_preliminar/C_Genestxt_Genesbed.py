@@ -1,25 +1,4 @@
 #!/usr/bin/env python3
-"""
-genes_to_bed.py
-
-Genera un archivo BED de genes a partir de una lista de nombres de genes
-(uno por línea) en un archivo de texto plano, usando la API REST de
-Ensembl (https://rest.ensembl.org). Solo GRCh38.
-
-Uso:
-    python genes_to_bed.py -i genes.txt -o genes_CMT.bed
-
-Formato de entrada (genes.txt), un gen por línea:
-    PMP22
-    GJB1
-    MFN2
-    MPZ
-
-Salida (BED, 0-based, estándar bedtools):
-    chr17   15133295   15185710   PMP22   .   +
-    chrX    70443100   70452553   GJB1    .   -
-    ...
-"""
 
 import argparse
 import json
