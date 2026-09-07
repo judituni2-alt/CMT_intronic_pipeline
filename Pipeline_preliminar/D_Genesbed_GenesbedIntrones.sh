@@ -1,35 +1,7 @@
 #!/usr/bin/env bash
-#
-# generar_bed_intrones.sh
-#
-# Genera un BED de INTRONES (con margen/padding hacia las regiones
-# flanqueantes de splicing) para los genes de interés, a partir de:
-#
-#   1. genes_CMT.bed          -> BED de genes completos (script genes_to_bed.py)
-#   2. GTF de MANE Select     -> anotación de exones por transcrito canónico
-#
-# Flujo:
-#   GTF MANE -> exones por gen (restringidos a genes_CMT.bed)
-#            -> exones_mane.bed (ordenado, fusionado)
-#   genes_CMT.bed - exones_mane.bed = intrones "crudos" (bedtools subtract)
-#   intrones "crudos" + padding hacia el exón (bedtools slop, recortado
-#   para no invadir el exón) = intrones_mane_padded.bed
-#
-# Requisitos: bedtools, awk, sort, un archivo .genome (tamaños de cromosoma)
-#             para bedtools slop.
-#
-# Descarga previa necesaria (una sola vez, no por muestra):
-#   GTF de MANE: https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/current/
-#                MANE.GRCh38.vX.X.ensembl_genomic.gtf.gz
-#   Tamaños de cromosoma GRCh38 (.genome / .fai):
-#                samtools faidx GRCh38.fa && cut -f1,2 GRCh38.fa.fai > GRCh38.genome
 
 set -euo pipefail
 
-# ---------------------------------------------------------------------------
-# PARSEO DE FLAGS con getopts (opciones cortas; getopts no soporta --flags
-# largos de forma nativa en bash)
-# ---------------------------------------------------------------------------
 mostrar_ayuda() {
     cat <<EOF
 Uso: $(basename "$0") -g FILE -m FILE -f FILE [-p N] [-o DIR]
@@ -71,10 +43,9 @@ while getopts ":g:m:f:p:o:h" opt; do
 done
 shift $((OPTIND - 1))
 
-# ---------------------------------------------------------------------------
-# CONFIGURACIÓN (valores por flag, si no, por variable de entorno; falla si
-# ninguno de los dos está definido en los campos obligatorios)
-# ---------------------------------------------------------------------------
+
+#-----------------CONFIGURACIÓN----------------------
+
 GENES_BED="${GENES_BED:?Debe definir GENES_BED (-g o variable de entorno)}"
 MANE_GTF="${MANE_GTF:?Debe definir MANE_GTF (-m o variable de entorno)}"
 GENOME_FILE="${GENOME_FILE:?Debe definir GENOME_FILE (-f o variable de entorno)}"
@@ -89,17 +60,14 @@ EXONES_BED="$OUTDIR/exones_mane.bed"
 INTRONES_CRUDOS="$OUTDIR/intrones_mane_raw.bed"
 INTRONES_PADDED="$OUTDIR/intrones_mane_padded.bed"
 
-# ---------------------------------------------------------------------------
-# 1. Extraer nombres de gen desde el BED de genes (columna 4)
-# ---------------------------------------------------------------------------
+#---------------Extraer nombres de gen desde el BED de genes (columna 4)-----------
 GENES_LISTA="$OUTDIR/lista_genes.txt"
 cut -f4 "$GENES_BED" | sort -u > "$GENES_LISTA"
 N_GENES=$(wc -l < "$GENES_LISTA")
 log "Paso 1/5: ${N_GENES} genes leídos desde $GENES_BED"
 
-# ---------------------------------------------------------------------------
-# 2. Extraer exones del GTF de MANE, restringidos a esos genes
-# ---------------------------------------------------------------------------
+#----------------Extraer exones del GTF de MANE, restringidos a esos genes------------
+
 log "Paso 2/5: extrayendo exones del GTF de MANE para los genes de interés"
 
 # Detecta si el GTF está comprimido (gzip) y lo descomprime al vuelo.
@@ -155,9 +123,9 @@ rm -f "$OUTDIR/exones_mane_gtf.tmp"
 N_EXONES_RAW=$(wc -l < "$EXONES_RAW")
 log "  Exones extraídos (sin fusionar): $N_EXONES_RAW"
 
-# ---------------------------------------------------------------------------
-# 3. Ordenar y fusionar exones solapantes/adyacentes por gen
-# ---------------------------------------------------------------------------
+
+#----------------Ordenar y fusionar exones solapantes/adyacentes por gen-------
+
 log "Paso 3/5: ordenando y fusionando exones"
 sort -k1,1 -k2,2n "$EXONES_RAW" > "$OUTDIR/exones_mane_sorted.bed"
 
@@ -170,9 +138,9 @@ bedtools merge -i "$OUTDIR/exones_mane_sorted.bed" -c 4,6 -o distinct,distinct \
 N_EXONES=$(wc -l < "$EXONES_BED")
 log "  Exones tras fusionar: $N_EXONES"
 
-# ---------------------------------------------------------------------------
-# 4. Intrones "crudos" = gen completo - exones (bedtools subtract)
-# ---------------------------------------------------------------------------
+
+#----------------Intrones "crudos" = gen completo - exones (bedtools subtract)------
+
 log "Paso 4/5: calculando intrones (gen completo - exones)"
 sort -k1,1 -k2,2n "$GENES_BED" > "$OUTDIR/genes_sorted.bed"
 
@@ -186,10 +154,9 @@ bedtools subtract \
 N_INTRONES_CRUDOS=$(wc -l < "$INTRONES_CRUDOS")
 log "  Intrones crudos generados: $N_INTRONES_CRUDOS"
 
-# ---------------------------------------------------------------------------
-# 5. Añadir padding hacia el exón (bedtools slop), recortando para no
-#    invadir el propio intrón vecino (-i tratado como límite del gen)
-# ---------------------------------------------------------------------------
+
+#------------------- Añadir padding hacia el exón ----------------
+
 log "Paso 5/5: ampliando intrones ±${PADDING}pb (bedtools slop) hacia las regiones flanqueantes"
 
 # bedtools slop expande simétricamente ambos lados del intervalo.
@@ -207,13 +174,4 @@ N_FINAL=$(wc -l < "$INTRONES_PADDED")
 log "Intrones finales (con padding ±${PADDING}pb, fusionados): $N_FINAL"
 log "BED final: $INTRONES_PADDED"
 
-# ---------------------------------------------------------------------------
-# Aviso importante sobre el padding y el exón
-# ---------------------------------------------------------------------------
-# bedtools slop expande el intrón hacia AMBOS lados, incluyendo unos pb hacia
-# dentro del exón vecino. Esto es intencionado: cubre splice_donor_variant,
-# splice_acceptor_variant y splice_region_variant, que incluyen posiciones
-# tanto intrónicas como las últimas/primeras bases exónicas adyacentes.
-# Si se prefiere un BED estrictamente intrónico (sin invadir el exón), usar
-# bedtools slop con -l/-r asimétrico o bedtools subtract final contra
-# exones_mane.bed tras el slop. Documentar la decisión tomada en la memoria.
+
